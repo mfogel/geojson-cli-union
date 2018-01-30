@@ -220,9 +220,246 @@ describe('different geojson object types', () => {
 
       expect.assertions(1)
       return toString(streamOut).then(function (str) {
-        const jsonOut = JSON.parse(str)
-        expect(jsonOut).toEqual(polygon)
+        expect(JSON.parse(str)).toEqual(polygon)
       })
     })
   }
+})
+
+describe('test union operation', () => {
+  test('disjoint', () => {
+    const jsonIn = {
+      type: 'MultiPolygon',
+      coordinates: [
+        [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+        [[[2, 2], [3, 2], [3, 3], [2, 3], [2, 2]]]
+      ]
+    }
+    const strIn = JSON.stringify(jsonIn)
+    const transform = new UnionTransform()
+    const streamOut = stream.PassThrough()
+
+    transform.pipe(streamOut)
+    transform.write(strIn)
+    transform.end()
+
+    expect.assertions(1)
+    return toString(streamOut).then(function (str) {
+      expect(JSON.parse(str)).toEqual(jsonIn)
+    })
+  })
+
+  test('touching at corner', () => {
+    const jsonIn = {
+      type: 'MultiPolygon',
+      coordinates: [
+        [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+        [[[1, 1], [2, 1], [2, 2], [1, 2], [1, 1]]]
+      ]
+    }
+    const strIn = JSON.stringify(jsonIn)
+    const transform = new UnionTransform()
+    const streamOut = stream.PassThrough()
+
+    transform.pipe(streamOut)
+    transform.write(strIn)
+    transform.end()
+
+    expect.assertions(1)
+    return toString(streamOut).then(function (str) {
+      expect(JSON.parse(str)).toEqual(jsonIn)
+    })
+  })
+
+  test('sharing a side', () => {
+    const jsonIn = {
+      type: 'MultiPolygon',
+      coordinates: [
+        [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+        [[[1, 0], [2, 0], [2, 1], [1, 1], [1, 0]]]
+      ]
+    }
+    const jsonOut = {
+      type: 'Polygon',
+      /* martinez returns extra points */
+      coordinates: [[[0, 0], [1, 0], [2, 0], [2, 1], [1, 1], [0, 1], [0, 0]]]
+    }
+    const strIn = JSON.stringify(jsonIn)
+    const transform = new UnionTransform()
+    const streamOut = stream.PassThrough()
+
+    transform.pipe(streamOut)
+    transform.write(strIn)
+    transform.end()
+
+    expect.assertions(1)
+    return toString(streamOut).then(function (str) {
+      expect(JSON.parse(str)).toEqual(jsonOut)
+    })
+  })
+
+  test('partially overlapping', () => {
+    const jsonIn = {
+      type: 'MultiPolygon',
+      coordinates: [
+        [[[0, 0], [2, 0], [2, 1], [0, 1], [0, 0]]],
+        [[[1, 0], [3, 0], [3, 1], [1, 1], [1, 0]]]
+      ]
+    }
+    const jsonOut = {
+      type: 'Polygon',
+      /* martinez returns extra points */
+      coordinates: [
+        [[0, 0], [1, 0], [2, 0], [3, 0], [3, 1], [2, 1], [1, 1], [0, 1], [0, 0]]
+      ]
+    }
+    const strIn = JSON.stringify(jsonIn)
+    const transform = new UnionTransform()
+    const streamOut = stream.PassThrough()
+
+    transform.pipe(streamOut)
+    transform.write(strIn)
+    transform.end()
+
+    expect.assertions(1)
+    return toString(streamOut).then(function (str) {
+      expect(JSON.parse(str)).toEqual(jsonOut)
+    })
+  })
+
+  test('fully overlapping', () => {
+    const jsonIn = {
+      type: 'MultiPolygon',
+      coordinates: [
+        [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+        [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]
+      ]
+    }
+    const jsonOut = {
+      type: 'Polygon',
+      coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]
+    }
+    const strIn = JSON.stringify(jsonIn)
+    const transform = new UnionTransform()
+    const streamOut = stream.PassThrough()
+
+    transform.pipe(streamOut)
+    transform.write(strIn)
+    transform.end()
+
+    expect.assertions(1)
+    return toString(streamOut).then(function (str) {
+      expect(JSON.parse(str)).toEqual(jsonOut)
+    })
+  })
+
+  test('many disjoint', () => {
+    const jsonIn = {
+      type: 'MultiPolygon',
+      coordinates: [
+        [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+        [[[2, 0], [3, 0], [3, 1], [2, 1], [2, 0]]],
+        [[[4, 0], [5, 0], [5, 1], [4, 1], [4, 0]]]
+      ]
+    }
+    const strIn = JSON.stringify(jsonIn)
+    const transform = new UnionTransform()
+    const streamOut = stream.PassThrough()
+
+    transform.pipe(streamOut)
+    transform.write(strIn)
+    transform.end()
+
+    expect.assertions(1)
+    return toString(streamOut).then(function (str) {
+      expect(JSON.parse(str)).toEqual(jsonIn)
+    })
+  })
+
+  test('many touching', () => {
+    const jsonIn = {
+      type: 'MultiPolygon',
+      coordinates: [
+        [[[0, 0], [2, 0], [2, 1], [0, 1], [0, 0]]],
+        [[[2, 0], [4, 0], [4, 1], [2, 1], [2, 0]]],
+        [[[4, 0], [6, 0], [6, 1], [4, 1], [4, 0]]]
+      ]
+    }
+    const jsonOut = {
+      type: 'Polygon',
+      /* martinez returns extra points */
+      coordinates: [
+        [[0, 0], [2, 0], [4, 0], [6, 0], [6, 1], [4, 1], [2, 1], [0, 1], [0, 0]]
+      ]
+    }
+    const strIn = JSON.stringify(jsonIn)
+    const transform = new UnionTransform()
+    const streamOut = stream.PassThrough()
+
+    transform.pipe(streamOut)
+    transform.write(strIn)
+    transform.end()
+
+    expect.assertions(1)
+    return toString(streamOut).then(function (str) {
+      expect(JSON.parse(str)).toEqual(jsonOut)
+    })
+  })
+
+  test('island in lake in island in lake', () => {
+    const jsonIn = {
+      type: 'MultiPolygon',
+      coordinates: [
+        [
+          [[-4, -4], [4, -4], [4, 4], [-4, 4], [-4, -4]],
+          [[-3, -3], [-3, 3], [3, 3], [3, -3], [-3, -3]]
+        ],
+        [
+          [[-2, -2], [2, -2], [2, 2], [-2, 2], [-2, -2]],
+          [[-1, -1], [-1, 1], [1, 1], [1, -1], [-1, -1]]
+        ]
+      ]
+    }
+    const strIn = JSON.stringify(jsonIn)
+    const transform = new UnionTransform()
+    const streamOut = stream.PassThrough()
+
+    transform.pipe(streamOut)
+    transform.write(strIn)
+    transform.end()
+
+    expect.assertions(1)
+    return toString(streamOut).then(function (str) {
+      expect(JSON.parse(str)).toEqual(jsonIn)
+    })
+  })
+
+  test('fill in lake', () => {
+    const jsonIn = {
+      type: 'MultiPolygon',
+      coordinates: [
+        [
+          [[-4, -4], [4, -4], [4, 4], [-4, 4], [-4, -4]],
+          [[-3, -3], [-3, 3], [3, 3], [3, -3], [-3, -3]]
+        ],
+        [[[-3, -3], [-3, 3], [3, 3], [3, -3], [-3, -3]]]
+      ]
+    }
+    const jsonOut = {
+      type: 'Polygon',
+      coordinates: [[[-4, -4], [4, -4], [4, 4], [-4, 4], [-4, -4]]]
+    }
+    const strIn = JSON.stringify(jsonIn)
+    const transform = new UnionTransform()
+    const streamOut = stream.PassThrough()
+
+    transform.pipe(streamOut)
+    transform.write(strIn)
+    transform.end()
+
+    expect.assertions(1)
+    return toString(streamOut).then(function (str) {
+      expect(JSON.parse(str)).toEqual(jsonOut)
+    })
+  })
 })
