@@ -36,7 +36,7 @@ Send any warnings (normally written to `stderr`) straight to `/dev/null`.
 
 ## Changelog
 
-### Master
+### 0.1.1
 
 * Add missing package
 
