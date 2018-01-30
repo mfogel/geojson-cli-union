@@ -1,20 +1,28 @@
 /* eslint-env jest */
 
-const fs = require('fs')
 const stream = require('stream')
 const toString = require('stream-to-string')
 const { UnionTransform } = require('../src/index.js')
 
-// const GeojsonEquality = require('geojson-equality')
-// const geojsonEq = new GeojsonEquality()
-
-const getStream = fn => fs.createReadStream('test/fixtures/' + fn, 'utf8')
-const getStr = fn => fs.readFileSync('test/fixtures/' + fn, 'utf8')
-const getJson = fn => JSON.parse(getStr(fn))
-
 describe('errors and warnings on bad input', () => {
+  const notJsonStr = 'not-json'
+
+  const jsonButNotGeojson = {
+    a: 'json object',
+    but: 'has no coordinates'
+  }
+
+  const point = {
+    type: 'Point',
+    coordinates: [0, 0]
+  }
+
+  const polygon = {
+    type: 'Polygon',
+    coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]
+  }
+
   test('error on invalid json input', () => {
-    const streamIn = getStream('not-json')
     const transform = new UnionTransform()
     const streamOut = stream.PassThrough()
 
@@ -24,10 +32,10 @@ describe('errors and warnings on bad input', () => {
       streamOut.end() // error doesn't propogate, must close final stream explicitly
     }
 
-    streamIn
-      .pipe(transform)
-      .on('error', onError)
-      .pipe(streamOut)
+    transform.on('error', onError)
+    transform.pipe(streamOut)
+    transform.write(notJsonStr)
+    transform.end()
 
     expect.assertions(1)
     return toString(streamOut).then(function (str) {
@@ -36,7 +44,6 @@ describe('errors and warnings on bad input', () => {
   })
 
   test('error on input valid json but no polygon coordinates to operate', () => {
-    const streamIn = getStream('json-but-not-geojson.json')
     const warn = jest.fn()
     const transform = new UnionTransform({ warn })
     const streamOut = stream.PassThrough()
@@ -47,10 +54,10 @@ describe('errors and warnings on bad input', () => {
       streamOut.end() // error doesn't propogate, must close final stream explicitly
     }
 
-    streamIn
-      .pipe(transform)
-      .on('error', onError)
-      .pipe(streamOut)
+    transform.on('error', onError)
+    transform.pipe(streamOut)
+    transform.write(JSON.stringify(jsonButNotGeojson))
+    transform.end()
 
     expect.assertions(1)
     return toString(streamOut).then(function (str) {
@@ -59,15 +66,13 @@ describe('errors and warnings on bad input', () => {
   })
 
   test('warn on non multipolygon/polygon geometries input', () => {
-    const strIn1 = getStr('point-origin.geojson')
-    const strIn2 = getStr('polygon-20x20.geojson')
     const warn = jest.fn()
     const transform = new UnionTransform({ warn })
     const streamOut = stream.PassThrough()
 
     transform.pipe(streamOut)
-    transform.write(strIn1)
-    transform.write(strIn2)
+    transform.write(JSON.stringify(point))
+    transform.write(JSON.stringify(polygon))
     transform.end()
 
     expect.assertions(1)
@@ -78,22 +83,27 @@ describe('errors and warnings on bad input', () => {
 })
 
 describe('json streaming', () => {
+  const polygon = {
+    type: 'Polygon',
+    coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]
+  }
+
   test('stream in one chunk', () => {
-    const streamIn = getStream('polygon-20x20.geojson')
     const transform = new UnionTransform()
     const streamOut = stream.PassThrough()
-    streamIn.pipe(transform).pipe(streamOut)
+
+    transform.pipe(streamOut)
+    transform.write(JSON.stringify(polygon))
+    transform.end()
 
     expect.assertions(1)
     return toString(streamOut).then(function (str) {
-      const jsonOut = JSON.parse(str)
-      const jsonExp = getJson('polygon-20x20.geojson')
-      expect(jsonOut).toEqual(jsonExp)
+      expect(JSON.parse(str)).toEqual(polygon)
     })
   })
 
   test('stream in awkward chunks', () => {
-    const strIn = getStr('polygon-20x20.geojson')
+    const strIn = JSON.stringify(polygon)
     const transform = new UnionTransform()
     const streamOut = stream.PassThrough()
 
@@ -106,14 +116,12 @@ describe('json streaming', () => {
 
     expect.assertions(1)
     return toString(streamOut).then(function (str) {
-      const jsonOut = JSON.parse(str)
-      const jsonExp = getJson('polygon-20x20.geojson')
-      expect(jsonOut).toEqual(jsonExp)
+      expect(JSON.parse(str)).toEqual(polygon)
     })
   })
 
   test('no delimiter between geojson objects', () => {
-    const strIn = getStr('polygon-20x20.geojson')
+    const strIn = JSON.stringify(polygon)
     const transform = new UnionTransform()
     const streamOut = stream.PassThrough()
 
@@ -123,14 +131,12 @@ describe('json streaming', () => {
 
     expect.assertions(1)
     return toString(streamOut).then(function (str) {
-      const jsonOut = JSON.parse(str)
-      const jsonExp = getJson('polygon-20x20.geojson')
-      expect(jsonOut).toEqual(jsonExp)
+      expect(JSON.parse(str)).toEqual(polygon)
     })
   })
 
   test('whitespace and newline delimiter between geojson objects', () => {
-    const strIn = getStr('polygon-20x20.geojson')
+    const strIn = JSON.stringify(polygon)
     const transform = new UnionTransform()
     const streamOut = stream.PassThrough()
 
@@ -143,9 +149,7 @@ describe('json streaming', () => {
 
     expect.assertions(1)
     return toString(streamOut).then(function (str) {
-      const jsonOut = JSON.parse(str)
-      const jsonExp = getJson('polygon-20x20.geojson')
-      expect(jsonOut).toEqual(jsonExp)
+      expect(JSON.parse(str)).toEqual(polygon)
     })
   })
 })

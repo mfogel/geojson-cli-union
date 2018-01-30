@@ -21,10 +21,6 @@ class UnionTransform extends Transform {
       throw new Error(`Unrecognized coordinates: ${coords}`)
     }
 
-    this.jsonStream.on('error', err => {
-      throw err
-    })
-
     this.jsonStream.on('data', coords => {
       const coordType = getCoordType(coords)
 
@@ -46,8 +42,12 @@ class UnionTransform extends Transform {
   }
 
   _transform (chunk, encoding, callback) {
-    this.jsonStream.write(chunk)
-    callback()
+    try {
+      this.jsonStream.write(chunk)
+      callback()
+    } catch (err) {
+      callback(err)
+    }
   }
 
   _flush (callback) {
