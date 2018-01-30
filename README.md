@@ -1,5 +1,3 @@
-### **Note: v0.1 in active dev. Features described below may not exist yet.**
-
 # geojson-cli-union
 
 Union/dissolve Polygons & MultiPolygons in your GeoJSON files into each other.
@@ -38,6 +36,6 @@ Send any warnings (normally written to `stderr`) straight to `/dev/null`.
 
 ## Changelog
 
-### Master
+### 0.1
 
 * Initial release
