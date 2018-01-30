@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const { exit, stdin, stdout } = require('process')
-const { UnionTransform } = require('./index.js')
+const UnionTransform = require('./index.js')
 
 const onError = err => {
   console.error(`Error: ${err.message}`)

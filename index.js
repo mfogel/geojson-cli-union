@@ -75,4 +75,4 @@ class UnionTransform extends Transform {
   }
 }
 
-module.exports = { UnionTransform }
+module.exports = UnionTransform

@@ -2,7 +2,7 @@
 
 const stream = require('stream')
 const toString = require('stream-to-string')
-const { UnionTransform } = require('./index.js')
+const UnionTransform = require('./index.js')
 
 describe('errors and warnings on bad input', () => {
   const notJsonStr = 'not-json'
