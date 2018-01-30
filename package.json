@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "JSONStream": "git://github.com/mfogel/JSONStream.git#fix-recurse-operator-#148",
-    "martinez-polygon-clipping": "git://github.com/mfogel/martinez.git#fix-overlapping-edges-#35"
+    "martinez-polygon-clipping": "git://github.com/mfogel/martinez.git#fix-overlapping-edges-#35",
+    "yargs": "^11.0.0"
   }
 }

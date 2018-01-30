@@ -36,6 +36,10 @@ Send any warnings (normally written to `stderr`) straight to `/dev/null`.
 
 ## Changelog
 
+### Master
+
+* Add missing package
+
 ### 0.1
 
 * Initial release
