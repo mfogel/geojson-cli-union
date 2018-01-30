@@ -35,25 +35,40 @@ describe('errors and warnings on bad input', () => {
     })
   })
 
-  test('warn on valid json but invalid geojson input', () => {
+  test('error on input valid json but no polygon coordinates to operate', () => {
     const streamIn = getStream('json-but-not-geojson.json')
     const warn = jest.fn()
     const transform = new UnionTransform({ warn })
     const streamOut = stream.PassThrough()
-    streamIn.pipe(transform).pipe(streamOut)
+
+    const tracker = jest.fn()
+    const onError = () => {
+      tracker()
+      streamOut.end() // error doesn't propogate, must close final stream explicitly
+    }
+
+    streamIn
+      .pipe(transform)
+      .on('error', onError)
+      .pipe(streamOut)
 
     expect.assertions(1)
     return toString(streamOut).then(function (str) {
-      expect(warn).toHaveBeenCalled()
+      expect(tracker).toHaveBeenCalled()
     })
   })
 
   test('warn on non multipolygon/polygon geometries input', () => {
-    const streamIn = getStream('point-origin.geojson')
+    const strIn1 = getStr('point-origin.geojson')
+    const strIn2 = getStr('polygon-20x20.geojson')
     const warn = jest.fn()
     const transform = new UnionTransform({ warn })
     const streamOut = stream.PassThrough()
-    streamIn.pipe(transform).pipe(streamOut)
+
+    transform.pipe(streamOut)
+    transform.write(strIn1)
+    transform.write(strIn2)
+    transform.end()
 
     expect.assertions(1)
     return toString(streamOut).then(function (str) {
@@ -81,8 +96,8 @@ describe('json streaming', () => {
     const strIn = getStr('polygon-20x20.geojson')
     const transform = new UnionTransform()
     const streamOut = stream.PassThrough()
-    transform.pipe(streamOut)
 
+    transform.pipe(streamOut)
     // feed the str in in 50 char increments
     for (let i = 0; i <= strIn.length; i += 50) {
       transform.write(strIn.substr(i, 50))
@@ -101,8 +116,8 @@ describe('json streaming', () => {
     const strIn = getStr('polygon-20x20.geojson')
     const transform = new UnionTransform()
     const streamOut = stream.PassThrough()
-    transform.pipe(streamOut)
 
+    transform.pipe(streamOut)
     for (let i = 0; i < 3; i++) transform.write(strIn)
     transform.end()
 
@@ -118,8 +133,8 @@ describe('json streaming', () => {
     const strIn = getStr('polygon-20x20.geojson')
     const transform = new UnionTransform()
     const streamOut = stream.PassThrough()
-    transform.pipe(streamOut)
 
+    transform.pipe(streamOut)
     for (let i = 0; i < 3; i++) {
       transform.write(strIn)
       transform.write('  \n')

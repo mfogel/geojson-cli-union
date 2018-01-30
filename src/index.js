@@ -1,5 +1,5 @@
+const JSONStream = require('JSONStream')
 const { Transform } = require('stream')
-const geojsonhint = require('@mapbox/geojsonhint')
 
 class UnionTransform extends Transform {
   constructor (options = {}) {
@@ -9,44 +9,57 @@ class UnionTransform extends Transform {
     options['decodeStrings'] = false
     super(options)
 
-    this.input = ''
     this.warn = warn
+    this.reducedCoords = null
+    this.jsonStream = JSONStream.parse([{ recurse: true }, 'coordinates'])
+
+    const getCoordType = coords => {
+      if (typeof coords[0] === 'number') return 'Point'
+      if (typeof coords[0][0] === 'number') return 'LineString'
+      if (typeof coords[0][0][0] === 'number') return 'Polygon'
+      if (typeof coords[0][0][0][0] === 'number') return 'MultiPolygon'
+      throw new Error(`Unrecognized coordinates: ${coords}`)
+    }
+
+    this.jsonStream.on('error', err => {
+      throw err
+    })
+
+    this.jsonStream.on('data', coords => {
+      const coordType = getCoordType(coords)
+
+      let multiPolyCoords
+      if (coordType === 'Polygon') multiPolyCoords = [coords]
+      else if (coordType === 'MultiPolygon') multiPolyCoords = coords
+      else {
+        this.warn(`Geojson ${coordType} object encountered. Dropping.`)
+        return
+      }
+
+      multiPolyCoords.forEach(polycoords => {
+        if (this.reducedCoords === null) this.reducedCoords = polycoords
+        else {
+          // TODO: do the union thing to reduce the coords
+        }
+      })
+    })
   }
 
   _transform (chunk, encoding, callback) {
-    this.input += chunk
+    this.jsonStream.write(chunk)
     callback()
   }
 
   _flush (callback) {
-    try {
-      let geojson = this.parse(this.input, 'stdin')
-      geojson = this.operate(geojson)
-      callback(null, JSON.stringify(geojson))
-    } catch (err) {
-      callback(err)
+    if (this.reducedCoords !== null) {
+      const result = {
+        type: 'Polygon',
+        coordinates: this.reducedCoords
+      }
+      callback(null, JSON.stringify(result))
+    } else {
+      callback(new Error('No polygons or multipolygons found to operate on'))
     }
-  }
-
-  parse (str, from) {
-    let geojson
-    try {
-      geojson = JSON.parse(str)
-    } catch (err) {
-      throw new SyntaxError(`Unable to parse JSON from ${from}: ${err.message}`)
-    }
-
-    const errors = geojsonhint.hint(geojson)
-    errors.forEach(e =>
-      this.warn(`Warning: JSON from ${from} is not valid GeoJSON: ${e.message}`)
-    )
-
-    return geojson
-  }
-
-  operate (geojson) {
-    /* pass through for testing */
-    return geojson
   }
 }
 

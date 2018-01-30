@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
-const { stdin, exit } = require('process')
-const { explode, explodeOptsDefaults } = require('./index.js')
+const { exit, stdin, stdout } = require('process')
+const { UnionTransform } = require('./index.js')
 
 const onError = err => {
   console.error(`Error: ${err.message}`)
   exit(1)
 }
 
-const getWarn = silent => (silent ? () => {} : explodeOptsDefaults.warn)
+const getWarn = silent => (silent ? () => {} : console.warn)
 
 require('yargs')
   .command(
@@ -18,7 +18,11 @@ require('yargs')
       yargs.example(
         'cat polys.geojson multipolys.geojson | $0 > a-poly-or-multipoly.geojson'
       ),
-    yargs => explode(stdin, { warn: getWarn(yargs.silent) }).catch(onError)
+    yargs =>
+      stdin
+        .pipe(new UnionTransform({ warn: getWarn(yargs.silent) }))
+        .on('error', onError)
+        .pipe(stdout)
   )
   .option('s', {
     alias: 'silent',
