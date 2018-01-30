@@ -149,3 +149,76 @@ describe('json streaming', () => {
     })
   })
 })
+
+describe('different geojson object types', () => {
+  const polygon = {
+    type: 'Polygon',
+    coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]
+  }
+
+  const multipolygon = {
+    type: 'MultiPolygon',
+    coordinates: [polygon.coordinates]
+  }
+
+  const geometrycollectionWithPolygon = {
+    type: 'GeometryCollection',
+    geometries: [polygon]
+  }
+
+  const geometrycollectionWithMultiPolygon = {
+    type: 'GeometryCollection',
+    geometries: [multipolygon]
+  }
+
+  const featureWithPolygon = {
+    type: 'Feature',
+    properties: {},
+    geometry: polygon
+  }
+
+  const featureWithMultiPolygon = {
+    type: 'Feature',
+    properties: {},
+    geometry: multipolygon
+  }
+
+  const featureCollectionWithPolygon = {
+    type: 'FeatureCollection',
+    features: [featureWithPolygon]
+  }
+
+  const featureCollectionWithMultiPolygon = {
+    type: 'FeatureCollection',
+    features: [featureWithMultiPolygon]
+  }
+
+  const testTargets = {
+    polygon,
+    multipolygon,
+    geometrycollectionWithPolygon,
+    geometrycollectionWithMultiPolygon,
+    featureWithPolygon,
+    featureWithMultiPolygon,
+    featureCollectionWithPolygon,
+    featureCollectionWithMultiPolygon
+  }
+
+  for (const objectType in testTargets) {
+    test(objectType, () => {
+      const strIn = JSON.stringify(testTargets[objectType])
+      const transform = new UnionTransform()
+      const streamOut = stream.PassThrough()
+
+      transform.pipe(streamOut)
+      transform.write(strIn)
+      transform.end()
+
+      expect.assertions(1)
+      return toString(streamOut).then(function (str) {
+        const jsonOut = JSON.parse(str)
+        expect(jsonOut).toEqual(polygon)
+      })
+    })
+  }
+})
