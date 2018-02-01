@@ -2,7 +2,7 @@
 
 Union/dissolve Polygons & MultiPolygons in your GeoJSON files into each other.
 
-[![npm version](https://img.shields.io/npm/v/npm.svg)](https://badge.fury.io/js/geojson-cli-union)
+[![npm version](https://img.shields.io/npm/v/geojson-cli-union.svg)](https://www.npmjs.com/package/geojson-cli-union)
 [![build status](https://img.shields.io/travis/mfogel/geojson-cli-union.svg)](https://travis-ci.org/mfogel/geojson-cli-union)
 [![test coverage](https://img.shields.io/coveralls/mfogel/geojson-cli-union/master.svg)](https://coveralls.io/r/mfogel/geojson-cli-union)
 
