@@ -1,6 +1,6 @@
 {
   "name": "geojson-cli-union",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Union/dissolve Polygons & MultiPolygons in your GeoJSON files into each other.",
   "repository": "github:mfogel/geojson-cli-union",
   "main": "index.js",
