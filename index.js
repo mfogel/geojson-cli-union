@@ -1,5 +1,5 @@
 const JSONStream = require('JSONStream')
-const martinez = require('martinez-polygon-clipping')
+const polygonClipping = require('polygon-clipping')
 const { Transform } = require('stream')
 
 class UnionTransform extends Transform {
@@ -33,11 +33,15 @@ class UnionTransform extends Transform {
         return
       }
 
-      /* has to be done two polygons at a time, until
-       * https://github.com/w8r/martinez/issues/34 gets implemented */
+      // TODO: no need to loop here anymore, simplify this.
       multiPolyCoords.forEach(polycoords => {
         if (this.reducedCoords === null) this.reducedCoords = [polycoords]
-        else this.reducedCoords = martinez.union(this.reducedCoords, polycoords)
+        else {
+          this.reducedCoords = polygonClipping.union(
+            this.reducedCoords,
+            polycoords
+          )
+        }
       })
     })
   }
@@ -53,13 +57,6 @@ class UnionTransform extends Transform {
 
   _flush (callback) {
     if (this.reducedCoords !== null) {
-      /* martinez returns inner rings with backward winding order */
-      this.reducedCoords.forEach(poly =>
-        poly
-          .slice(1)
-          .forEach((ring, index, poly) => (poly[index] = ring.reverse()))
-      )
-
       let result = {}
       if (this.reducedCoords.length === 1) {
         result['type'] = 'Polygon'

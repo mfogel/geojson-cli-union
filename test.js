@@ -281,8 +281,7 @@ describe('test union operation', () => {
     }
     const jsonOut = {
       type: 'Polygon',
-      /* martinez returns extra points */
-      coordinates: [[[0, 0], [1, 0], [2, 0], [2, 1], [1, 1], [0, 1], [0, 0]]]
+      coordinates: [[[0, 0], [2, 0], [2, 1], [0, 1], [0, 0]]]
     }
     const strIn = JSON.stringify(jsonIn)
     const transform = new UnionTransform()
@@ -308,10 +307,7 @@ describe('test union operation', () => {
     }
     const jsonOut = {
       type: 'Polygon',
-      /* martinez returns extra points */
-      coordinates: [
-        [[0, 0], [1, 0], [2, 0], [3, 0], [3, 1], [2, 1], [1, 1], [0, 1], [0, 0]]
-      ]
+      coordinates: [[[0, 0], [3, 0], [3, 1], [0, 1], [0, 0]]]
     }
     const strIn = JSON.stringify(jsonIn)
     const transform = new UnionTransform()
@@ -387,10 +383,7 @@ describe('test union operation', () => {
     }
     const jsonOut = {
       type: 'Polygon',
-      /* martinez returns extra points */
-      coordinates: [
-        [[0, 0], [2, 0], [4, 0], [6, 0], [6, 1], [4, 1], [2, 1], [0, 1], [0, 0]]
-      ]
+      coordinates: [[[0, 0], [6, 0], [6, 1], [0, 1], [0, 0]]]
     }
     const strIn = JSON.stringify(jsonIn)
     const transform = new UnionTransform()
