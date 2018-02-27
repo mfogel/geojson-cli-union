@@ -40,7 +40,7 @@ Send any warnings (normally written to `stderr`) straight to `/dev/null`.
 
 ## Changelog
 
-### Not yet released
+### 0.2
 
 * Use [polygon-clipping](https://www.npmjs.com/package/polygon-clipping) as backend
 
