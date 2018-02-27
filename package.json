@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "JSONStream": "git://github.com/mfogel/JSONStream.git#fix-recurse-operator-#148",
-    "polygon-clipping": "git://github.com/mfogel/polygon-clipping.git#polygon-clipping",
+    "polygon-clipping": "0.4.0",
     "yargs": "^11.0.0"
   }
 }
