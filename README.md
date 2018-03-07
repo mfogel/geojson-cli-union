@@ -1,3 +1,5 @@
+## Deprecated: Please use [geojson-clipping](https://github.com/mfogel/geojson-clipping) instead.
+
 # geojson-cli-union
 
 Union/dissolve Polygons & MultiPolygons in your GeoJSON files into each other.
