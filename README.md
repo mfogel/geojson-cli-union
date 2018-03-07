@@ -42,6 +42,10 @@ Send any warnings (normally written to `stderr`) straight to `/dev/null`.
 
 ## Changelog
 
+### 0.2.1
+
+* Deprecate in favor of [geojson-clipping](https://github.com/mfogel/geojson-clipping)
+
 ### 0.2
 
 * Use [polygon-clipping](https://www.npmjs.com/package/polygon-clipping) as backend
